@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+target/
+.spin/
+.spin-aka/
+# Local variable file with credentials
+hot.vars.json
+variables.json

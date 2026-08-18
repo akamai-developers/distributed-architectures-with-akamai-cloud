@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-processor
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: order-processor
+  template:
+    metadata:
+      labels:
+        app: order-processor
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: order-processor
+          image: order-processor:latest
+          env:
+            - name: STREAM_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: order-processor-config
+                  key: STREAM_NAME
+                  optional: true
+            - name: CONSUMER_GROUP
+              valueFrom:
+                configMapKeyRef:
+                  name: order-processor-config
+                  key: CONSUMER_GROUP
+                  optional: true
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: order-processor-config
+                  key: LOG_LEVEL
+                  optional: true
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VALKEY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: order-processor-secret
+                  key: VALKEY_URL
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-processor
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: order-processor
+  ports:
+    - port: 80
+      targetPort: 8080

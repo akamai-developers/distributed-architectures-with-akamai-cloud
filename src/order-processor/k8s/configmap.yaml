@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order-processor-config
+  namespace: default
+data:
+  STREAM_NAME: "orders"
+  CONSUMER_GROUP: "order-processors"
+  LOG_LEVEL: "info"

@@ -1,0 +1,40 @@
+spin_manifest_version = 2
+
+[application]
+authors = ["Thorsten Hans <thans@akamai.com>"]
+description = ""
+name = "order-gateway"
+version = "0.1.0"
+targets = ["akamai-functions"]
+
+[variables]
+# Individual components of the Valkey/Redis connection.
+valkey_scheme = { default = "rediss" }
+valkey_host = { default = "localhost" }
+valkey_port = { default = "6379" }
+valkey_username = { default = "" }
+valkey_password = { default = "", secret = true }
+# Name of the stream orders are appended to.
+stream_name = { default = "orders" }
+
+[[trigger.http]]
+route = "/..."
+component = "order-gateway"
+
+[component.order-gateway]
+source = "dist/order-gateway.wasm"
+exclude_files = ["**/node_modules"]
+# Only scheme + host + port are allowed for outbound; credentials are excluded.
+allowed_outbound_hosts = [
+    "{{ valkey_scheme }}://{{ valkey_host }}:{{ valkey_port }}",
+    # "tcp://127.0.0.1:*", # Uncomment this line to while using the StarlingMonkey Debugger
+]
+
+[component.order-gateway.variables]
+# Full connection string (including credentials) composed for the component.
+valkey_url = "{{ valkey_scheme }}://{{ valkey_username }}:{{ valkey_password }}@{{ valkey_host }}:{{ valkey_port }}"
+stream_name = "{{ stream_name }}"
+
+[component.order-gateway.build]
+command = ["npm install", "npm run build"]
+watch = ["src/**/*.ts"]
